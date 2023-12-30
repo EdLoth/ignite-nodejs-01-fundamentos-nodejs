@@ -1,7 +1,8 @@
 import http from 'http';
 import { json } from './middlewares/json.js';
+import { Database } from './database.js';
 
-const users = []
+const database = new Database()
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
@@ -9,23 +10,25 @@ const server = http.createServer(async (req, res) => {
   await json(req, res)
 
   if (method === 'GET' && url === '/users') {
-    return res
-      .end(JSON.stringify(users));
+    const users = database.select('users')
+
+    return res.end(JSON.stringify(users));
   }
 
   if (method === 'POST' && url === '/users') {
     const { name, email } = req.body;
 
-    users.push({
+    const user = {
       id: 1,
       name,
       email
-    })
+    }
 
-    return res.end('Criação de Usuarios - nome:' + name + ', email:' + email + '.👌');
+    database.insert('users', user)
+    return res.writeHead(201).end(JSON.stringify(user))
   }
 
-  return res.end('Hello, IGNITE!');
+  return res.writeHead(404).end()
 })
 
 server.listen(3333);
